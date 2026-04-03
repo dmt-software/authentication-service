@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\AuthenticationService\Exceptions;
 
-use DMT\AuthenticationService\Exceptions\ExceptionInterface;
+use RuntimeException;
 
-class AuthenticationException extends \RuntimeException implements ExceptionInterface
+class AuthenticationException extends RuntimeException implements ExceptionInterface
 {
-
 }

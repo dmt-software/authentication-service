@@ -2,29 +2,27 @@
 
 namespace DMT\AuthenticationService\Password;
 
-use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use SensitiveParameter;
 
 class NativePasswordHandler implements PasswordHandlerInterface
 {
-
     public function hash(#[SensitiveParameter] string $plainPassword): string
     {
-        // TODO: Implement hash() method.
+        return password_hash($plainPassword, PASSWORD_DEFAULT);
     }
 
     public function verify(#[SensitiveParameter] string $plainPassword, string $passwordHash): bool
     {
-        // TODO: Implement verify() method.
+        return password_verify($plainPassword, $passwordHash);
     }
 
     public function needsRehash(#[SensitiveParameter] string $passwordHash): bool
     {
-        // TODO: Implement needsRehash() method.
+        return password_needs_rehash($passwordHash, PASSWORD_DEFAULT);
     }
 
-    public function randomPassword(int $length = 8): string
+    public function randomPassword(int $length = 16): string
     {
-        // TODO: Implement randomPassword() method.
+        return substr(password_hash(uniqid(), PASSWORD_DEFAULT), -$length);
     }
 }
