@@ -1,10 +1,10 @@
 <?php
 
-namespace DMT\AuthenticationService;
+namespace DMT\AuthenticationService\Handlers;
 
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\AuthenticationService\Model\CredentialsObject;
-use DMT\AuthenticationService\Model\UserCredentials;
+use DMT\AuthenticationService\Handlers\Model\CredentialsObject;
+use DMT\AuthenticationService\Handlers\Model\UserCredentials;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
@@ -55,7 +55,7 @@ final readonly class EmailPasswordHandler implements AuthenticationHandlerInterf
             throw new AuthenticationException('Invalid credentials.');
         }
 
-        if ($this->passwordHandler->verify($credentials->password, $user->password)) {
+        if (!$this->passwordHandler->verify($credentials->password, $user->password)) {
             throw new AuthenticationException('Invalid credentials.');
         }
 

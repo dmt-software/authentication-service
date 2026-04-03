@@ -1,9 +1,9 @@
 <?php
 
-namespace DMT\AuthenticationService;
+namespace DMT\AuthenticationService\Handlers;
 
-use ArrayObject;
-use DMT\AuthenticationService\Model\CredentialsObject;
+use DMT\AuthenticationService\Exceptions\AuthenticationException;
+use DMT\AuthenticationService\Handlers\Model\CredentialsObject;
 use SensitiveParameter;
 
 interface AuthenticationHandlerInterface
@@ -11,7 +11,7 @@ interface AuthenticationHandlerInterface
     public static function createCredentials(#[SensitiveParameter] array $credentials): CredentialsObject;
 
     /**
-     * @throws \DMT\AuthenticationService\Exceptions\AuthenticationException
+     * @throws AuthenticationException
      */
     public function authenticate(CredentialsObject $credentials): object;
 }

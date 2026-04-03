@@ -1,10 +1,10 @@
 <?php
 
-namespace DMT\AuthenticationService;
+namespace DMT\AuthenticationService\Handlers;
 
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\AuthenticationService\Model\CredentialsObject;
-use DMT\AuthenticationService\Model\UserToken;
+use DMT\AuthenticationService\Handlers\Model\CredentialsObject;
+use DMT\AuthenticationService\Handlers\Model\UserToken;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use SensitiveParameter;
@@ -12,7 +12,7 @@ use SensitiveParameter;
 /**
  * @template T of object
  */
-class UserTokenHandler implements AuthenticationHandlerInterface, UserTokenHandlerInterface
+class UserTokenHandler implements AuthenticationHandlerInterface
 {
     /** @var class-string<T> */
     private string $entityName;
@@ -49,7 +49,7 @@ class UserTokenHandler implements AuthenticationHandlerInterface, UserTokenHandl
 
         $token = $this->entityManager->find($this->entityName, get_object_vars($credentials));
 
-        if ($token === null || ! $token->isValid()) {
+        if ($token === null || ! $token->isValid() || ! $token->user) {
             throw new AuthenticationException('Invalid token.');
         }
 

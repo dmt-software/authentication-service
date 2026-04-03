@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
+use DMT\AuthenticationService\Handlers\AuthenticationHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\Traits\HasContainer;
 use Doctrine\ORM\EntityManagerInterface;
@@ -11,33 +12,38 @@ use Doctrine\ORM\EntityManagerInterface;
 /**
  * @template T of object
  */
-readonly class AuthenticationService
+final class AuthenticationService implements AuthenticationServiceInterface
 {
     use HasContainer;
 
     /** @var class-string<T> */
-    private string $entityName;
+    private readonly string $entityName;
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private SessionHandlerInterface $sessionHandler,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly SessionHandlerInterface $sessionHandler,
         string $entityName,
     ) {
         $this->entityName = $entityName;
     }
 
     /**
-     * @param class-string<\DMT\AuthenticationService\AuthenticationHandlerInterface> $handler
+     * {@inheritDoc}
      *
      * @return T
      * @throws \DMT\AuthenticationService\Exceptions\AuthenticationException
+     * @throws \DMT\DependencyInjection\Exceptions\NotFoundException
+     * @throws \Psr\Container\ContainerExceptionInterface
      */
     public function authenticate(
-        string $handler,
+        string $handlerClass,
         #[\SensitiveParameter] array $parameters = [],
         bool $persist = false
     ): object {
-        $user = $this->getContainer()->get($handler)->authenticate($handler::getCredentials($parameters));
+        /** @var AuthenticationHandlerInterface $handler */
+        $handler = $this->getContainer()->get($handlerClass);
+
+        $user = $handler->authenticate($handlerClass::getCredentials($parameters));
 
         if ($persist) {
             $this->sessionHandler->login($user->id);
@@ -47,10 +53,9 @@ readonly class AuthenticationService
     }
 
     /**
-     * Get the user from session.
+     * {@inheritDoc}
      *
      * @return T|null
-     *
      * @throws \Doctrine\ORM\Exception\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService\Middlewares;
 
-use DMT\AuthenticationService\AuthenticationService;
+use DMT\AuthenticationService\AuthenticationServiceInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Twig\Environment;
 
-class AuthenticationMiddleware implements MiddlewareInterface
+final readonly class AuthenticationMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private AuthenticationService $service,
+        private AuthenticationServiceInterface $service,
         private Environment $twig,
     ) {
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace DMT\AuthenticationService\Model;
+namespace DMT\AuthenticationService\Handlers\Model;
 
 use SensitiveParameter;
 

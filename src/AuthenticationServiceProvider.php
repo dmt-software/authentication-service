@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
+use DMT\AuthenticationService\Handlers\EmailPasswordHandler;
+use DMT\AuthenticationService\Handlers\UserTokenHandler;
 use DMT\AuthenticationService\Middlewares\AuthenticationMiddleware;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
@@ -52,8 +54,8 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         );
 
         $container->set(
-            id: AuthenticationService::class,
-            value: fn () => new AuthenticationService(
+            id: AuthenticationServiceInterface::class,
+            value: fn (): AuthenticationServiceInterface => new AuthenticationService(
                 $container->get(EntityManagerInterface::class),
                 $container->get(SessionHandlerInterface::class),
                 $this->userEntity
@@ -63,7 +65,7 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         $container->set(
             id: AuthenticationMiddleware::class,
             value: fn (): AuthenticationMiddleware => new AuthenticationMiddleware(
-                $container->get(AuthenticationService::class),
+                $container->get(AuthenticationServiceInterface::class),
                 $container->get(Environment::class),
             )
         );

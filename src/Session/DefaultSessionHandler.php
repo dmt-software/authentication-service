@@ -58,6 +58,10 @@ class DefaultSessionHandler implements SessionHandlerInterface
 
     public function getAuthenticatedUserId(): ?int
     {
-        return 1;
+        $this->start();
+
+        $userId = $_SESSION[self::USER_ID_KEY] ?? null;
+
+        return is_int($userId) ? $userId : null;
     }
 }

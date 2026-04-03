@@ -1,6 +1,6 @@
 <?php
 
-namespace DMT\AuthenticationService\Model;
+namespace DMT\AuthenticationService\Handlers\Model;
 
 abstract class CredentialsObject
 {
@@ -11,6 +11,6 @@ abstract class CredentialsObject
 
     public function __debugInfo(): ?array
     {
-        return get_class_vars(static::class);
+        return array_keys(get_class_vars(static::class));
     }
 }
