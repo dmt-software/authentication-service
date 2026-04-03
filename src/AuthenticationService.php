@@ -43,7 +43,7 @@ final class AuthenticationService implements AuthenticationServiceInterface
         /** @var AuthenticationHandlerInterface $handler */
         $handler = $this->getContainer()->get($handlerClass);
 
-        $user = $handler->authenticate($handlerClass::getCredentials($parameters));
+        $user = $handler->authenticate($handlerClass::createCredentials($parameters));
 
         if ($persist) {
             $this->sessionHandler->login($user->id);
