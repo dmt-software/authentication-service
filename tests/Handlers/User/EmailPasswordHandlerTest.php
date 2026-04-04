@@ -1,8 +1,9 @@
 <?php
 
-namespace DMT\Test\AuthenticationService\Handlers;
+namespace DMT\Test\AuthenticationService\Handlers\Token;
 
-use DMT\AuthenticationService\Exceptions\AuthenticationException;use DMT\AuthenticationService\Handlers\EmailPasswordHandler;
+use DMT\AuthenticationService\Exceptions\AuthenticationException;
+use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,18 +18,13 @@ class EmailPasswordHandlerTest extends TestCase
         $user->email = 'user@example.com';
         $user->password = password_hash('password', PASSWORD_DEFAULT);
 
-        $credentials = EmailPasswordHandler::createCredentials([
-            'email' => 'user@example.com',
-            'password' => 'password'
-        ]);
-
-        $handler = new EmailPasswordHandler(
+        $handler = new EmailPasswordAuthenticationHandler(
             $this->getEntityManagerForUser($user),
             new NativePasswordHandler(),
             User::class
         );
 
-        $handler->authenticate($credentials);
+        $handler->authenticate(['email' => 'user@example.com', 'password' => 'password']);
     }
 
     public function testAuthenticateWithUnknownUser(): void
@@ -36,18 +32,13 @@ class EmailPasswordHandlerTest extends TestCase
         $this->expectException(AuthenticationException::class);
         $this->expectExceptionMessage('Invalid credentials.');
 
-        $credentials = EmailPasswordHandler::createCredentials([
-            'email' => 'user@example.com',
-            'password' => 'password'
-        ]);
-
-        $handler = new EmailPasswordHandler(
+        $handler = new EmailPasswordAuthenticationHandler(
             $this->getEntityManagerForUser(null),
             new NativePasswordHandler(),
             User::class
         );
 
-        $handler->authenticate($credentials);
+        $handler->authenticate(['email' => 'user@example.com', 'password' => 'password']);
     }
 
     public function testAuthenticateWithInvalidCredentials(): void
@@ -60,18 +51,13 @@ class EmailPasswordHandlerTest extends TestCase
         $user->email = 'user@example.com';
         $user->password = password_hash('other-password', PASSWORD_DEFAULT);
 
-        $credentials = EmailPasswordHandler::createCredentials([
-            'email' => 'user@example.com',
-            'password' => 'password'
-        ]);
-
-        $handler = new EmailPasswordHandler(
+        $handler = new EmailPasswordAuthenticationHandler(
             $this->getEntityManagerForUser($user),
             new NativePasswordHandler(),
             User::class
         );
 
-        $handler->authenticate($credentials);
+        $handler->authenticate(['email' => 'user@example.com', 'password' => 'password']);
     }
 
     public function testAuthenticateWithInactiveUser(): void
@@ -83,18 +69,13 @@ class EmailPasswordHandlerTest extends TestCase
         $user->email = 'user@example.com';
         $user->password = password_hash('password', PASSWORD_DEFAULT);
 
-        $credentials = EmailPasswordHandler::createCredentials([
-            'email' => 'user@example.com',
-            'password' => 'password'
-        ]);
-
-        $handler = new EmailPasswordHandler(
+        $handler = new EmailPasswordAuthenticationHandler(
             $this->getEntityManagerForUser($user),
             new NativePasswordHandler(),
             User::class
         );
 
-        $handler->authenticate($credentials);
+        $handler->authenticate(['email' => 'user@example.com', 'password' => 'password']);
     }
 
     private function getEntityManagerForUser(?User $user): EntityManagerInterface

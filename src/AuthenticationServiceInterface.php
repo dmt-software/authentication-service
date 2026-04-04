@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
-use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\AuthenticationService\Handlers\AuthenticationHandlerInterface;
+use SensitiveParameter;
 
 interface AuthenticationServiceInterface
 {
     /**
-     * @param class-string<AuthenticationHandlerInterface> $handlerClass
-     * @throws AuthenticationException
+     * @throws \DMT\AuthenticationService\Exceptions\AuthenticationException
      */
-    public function authenticate(
-        string $handlerClass,
-        #[\SensitiveParameter] array $parameters = [],
-        bool $persist = false
-    ): object;
+    public function authenticate(#[SensitiveParameter] array $parameters, bool $persist = false): object;
+
+    /**
+     * @throws \DMT\AuthenticationService\Exceptions\AuthenticationException
+     */
+    public function authenticateByToken(#[SensitiveParameter] array $parameters, bool $persist = false): object;
 
     /**
      * @throws \Doctrine\ORM\Exception\ORMException

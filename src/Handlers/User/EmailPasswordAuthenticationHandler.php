@@ -1,0 +1,58 @@
+<?php
+
+namespace DMT\AuthenticationService\Handlers\User;
+
+use DMT\AuthenticationService\Exceptions\AuthenticationException;
+use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Password\PasswordHandlerInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
+use SensitiveParameter;
+
+/**
+ * @template Entity of object
+ */
+final readonly class EmailPasswordAuthenticationHandler implements UserAuthenticationHandlerInterface
+{
+    /** @var class-string<Entity> */
+    private string $userEntity;
+
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private PasswordHandlerInterface $passwordHandler,
+        string $entityName
+    ) {
+        if (!method_exists($entityName, 'isActive')) {
+            throw new InvalidArgumentException('Entity must implement "isActive" method');
+        }
+
+        $this->userEntity = $entityName;
+    }
+
+    /**
+     * Authenticate using email and password.
+     *
+     * @return Entity
+     *
+     * @throws \Doctrine\ORM\Exception\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function authenticate(#[SensitiveParameter] array $parameters): object
+    {
+        if (!isset($parameters['email']) || !isset($parameters['password'])) {
+            throw new AuthenticationException('Invalid credentials.');
+        }
+
+        $user = $this->entityManager->find($this->userEntity, ['email' => $parameters['email']]);
+
+        if ($user === null || !$user->isActive()) {
+            throw new AuthenticationException('Invalid credentials.');
+        }
+
+        if (!$this->passwordHandler->verify($parameters['password'], $user->password)) {
+            throw new AuthenticationException('Invalid credentials.');
+        }
+
+        return $user;
+    }
+}

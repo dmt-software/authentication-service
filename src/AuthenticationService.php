@@ -4,46 +4,42 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
-use DMT\AuthenticationService\Handlers\AuthenticationHandlerInterface;
+use DMT\AuthenticationService\Exceptions\AuthenticationException as AuthenticationException;
+use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\Traits\HasContainer;
 use Doctrine\ORM\EntityManagerInterface;
+use SensitiveParameter;
 
 /**
- * @template T of object
+ * @template Entity of object
  */
 final class AuthenticationService implements AuthenticationServiceInterface
 {
     use HasContainer;
 
-    /** @var class-string<T> */
+    /** @var class-string<Entity> */
     private readonly string $entityName;
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly SessionHandlerInterface $sessionHandler,
-        string $entityName,
+        private readonly EntityManagerInterface              $entityManager,
+        private readonly SessionHandlerInterface             $sessionHandler,
+        private readonly UserAuthenticationHandlerInterface  $userAuthenticationHandler,
+        private readonly TokenAuthenticationHandlerInterface $tokenAuthenticationHandler,
+        string                                               $entityName,
     ) {
         $this->entityName = $entityName;
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @return T
-     * @throws \DMT\AuthenticationService\Exceptions\AuthenticationException
-     * @throws \DMT\DependencyInjection\Exceptions\NotFoundException
-     * @throws \Psr\Container\ContainerExceptionInterface
+     * @return Entity
+     * @throws AuthenticationException
+     * @throws \Doctrine\ORM\Exception\ORMException
      */
-    public function authenticate(
-        string $handlerClass,
-        #[\SensitiveParameter] array $parameters = [],
-        bool $persist = false
-    ): object {
-        /** @var AuthenticationHandlerInterface $handler */
-        $handler = $this->getContainer()->get($handlerClass);
-
-        $user = $handler->authenticate($handlerClass::createCredentials($parameters));
+    public function authenticate(#[SensitiveParameter] array $parameters, bool $persist = false): object
+    {
+        $user = $this->userAuthenticationHandler->authenticate($parameters);
 
         if ($persist) {
             $this->sessionHandler->login($user->id);
@@ -53,11 +49,24 @@ final class AuthenticationService implements AuthenticationServiceInterface
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @return T|null
+     * @return Entity
+     * @throws AuthenticationException
      * @throws \Doctrine\ORM\Exception\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function authenticateByToken(#[SensitiveParameter] array $parameters, bool $persist = false): object
+    {
+        $user = $this->tokenAuthenticationHandler->authenticate($parameters)->user;
+
+        if ($persist) {
+            $this->sessionHandler->login($user->id);
+        }
+
+        return $user;
+    }
+
+    /**
+     * @return Entity|null
+     * @throws \Doctrine\ORM\Exception\ORMException
      */
     public function getAuthenticatedUser(): ?object
     {

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
-use DMT\AuthenticationService\Handlers\EmailPasswordHandler;
-use DMT\AuthenticationService\Handlers\UserTokenHandler;
+use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\Token\UserTokenAuthenticationHandler;
 use DMT\AuthenticationService\Middlewares\AuthenticationMiddleware;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
@@ -37,16 +39,16 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         );
 
         $container->set(
-            id: UserTokenHandler::class,
-            value: fn (): UserTokenHandler => new UserTokenHandler(
+            id: TokenAuthenticationHandlerInterface::class,
+            value: fn (): TokenAuthenticationHandlerInterface => new UserTokenAuthenticationHandler(
                 $container->get(EntityManagerInterface::class),
                 $this->tokenEntity
             )
         );
 
         $container->set(
-            id: EmailPasswordHandler::class,
-            value: fn (): EmailPasswordHandler => new EmailPasswordHandler(
+            id: UserAuthenticationHandlerInterface::class,
+            value: fn (): UserAuthenticationHandlerInterface => new EmailPasswordAuthenticationHandler(
                 $container->get(EntityManagerInterface::class),
                 $container->get(PasswordHandlerInterface::class),
                 $this->userEntity
@@ -58,6 +60,8 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
             value: fn (): AuthenticationServiceInterface => new AuthenticationService(
                 $container->get(EntityManagerInterface::class),
                 $container->get(SessionHandlerInterface::class),
+                $container->get(UserAuthenticationHandlerInterface::class),
+                $container->get(TokenAuthenticationHandlerInterface::class),
                 $this->userEntity
             )
         );

@@ -3,8 +3,10 @@
 namespace DMT\Test\AuthenticationService;
 
 use DMT\AuthenticationService\AuthenticationService;
-use DMT\AuthenticationService\Handlers\EmailPasswordHandler;
-use DMT\AuthenticationService\Handlers\UserTokenHandler;
+use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Handlers\Token\UserTokenAuthenticationHandler;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\ContainerFactory;
@@ -21,11 +23,18 @@ class AuthenticationServiceTest extends TestCase
 
         $container = new ContainerFactory()->createContainer();
         $container->set(
-            EmailPasswordHandler::class,
-            fn (): EmailPasswordHandler => new EmailPasswordHandler(
+            UserAuthenticationHandlerInterface::class,
+            fn (): UserAuthenticationHandlerInterface => new EmailPasswordAuthenticationHandler(
                 $entityManager,
                 new NativePasswordHandler(),
                 User::class,
+            )
+        );
+        $container->set(
+            TokenAuthenticationHandlerInterface::class,
+            fn (): TokenAuthenticationHandlerInterface => new UserTokenAuthenticationHandler(
+                $entityManager,
+                UserToken::class,
             )
         );
 
@@ -39,6 +48,8 @@ class AuthenticationServiceTest extends TestCase
             AuthenticationService::class,
             $entityManager,
             $sessionHandler,
+            $container->get(UserAuthenticationHandlerInterface::class),
+            $container->get(TokenAuthenticationHandlerInterface::class),
             User::class
         );
 
@@ -47,7 +58,7 @@ class AuthenticationServiceTest extends TestCase
             'password' => 'password'
         ];
 
-        $service->authenticate(EmailPasswordHandler::class, $credentials, true);
+        $service->authenticate($credentials, true);
     }
 
     public function testAuthenticateWithUserToken(): void
@@ -57,8 +68,16 @@ class AuthenticationServiceTest extends TestCase
 
         $container = new ContainerFactory()->createContainer();
         $container->set(
-            UserTokenHandler::class,
-            fn (): UserTokenHandler => new UserTokenHandler(
+            UserAuthenticationHandlerInterface::class,
+            fn (): UserAuthenticationHandlerInterface => new EmailPasswordAuthenticationHandler(
+                $entityManager,
+                new NativePasswordHandler(),
+                User::class,
+            )
+        );
+        $container->set(
+            TokenAuthenticationHandlerInterface::class,
+            fn (): TokenAuthenticationHandlerInterface => new UserTokenAuthenticationHandler(
                 $entityManager,
                 UserToken::class,
             )
@@ -73,6 +92,8 @@ class AuthenticationServiceTest extends TestCase
             AuthenticationService::class,
             $entityManager,
             $sessionHandler,
+            $container->get(UserAuthenticationHandlerInterface::class),
+            $container->get(TokenAuthenticationHandlerInterface::class),
             User::class
         );
 
@@ -81,7 +102,7 @@ class AuthenticationServiceTest extends TestCase
             'reason' => 'activate',
         ];
 
-        $service->authenticate(UserTokenHandler::class, $credentials);
+        $service->authenticateByToken($credentials);
     }
 
     private function getEntityManager(): EntityManagerInterface
