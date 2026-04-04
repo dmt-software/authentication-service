@@ -8,28 +8,22 @@ use DMT\AuthenticationService\Exceptions\AuthenticationException as Authenticati
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
-use DMT\DependencyInjection\Traits\HasContainer;
 use Doctrine\ORM\EntityManagerInterface;
 use SensitiveParameter;
 
 /**
  * @template Entity of object
  */
-final class AuthenticationService implements AuthenticationServiceInterface
+final readonly class AuthenticationService implements AuthenticationServiceInterface
 {
-    use HasContainer;
-
-    /** @var class-string<Entity> */
-    private readonly string $entityName;
-
     public function __construct(
-        private readonly EntityManagerInterface              $entityManager,
-        private readonly SessionHandlerInterface             $sessionHandler,
-        private readonly UserAuthenticationHandlerInterface  $userAuthenticationHandler,
-        private readonly TokenAuthenticationHandlerInterface $tokenAuthenticationHandler,
-        string                                               $entityName,
+        private EntityManagerInterface $entityManager,
+        private SessionHandlerInterface $sessionHandler,
+        private UserAuthenticationHandlerInterface $userAuthenticationHandler,
+        private TokenAuthenticationHandlerInterface $tokenAuthenticationHandler,
+        /** @var class-string<Entity> */
+        private string $entityName
     ) {
-        $this->entityName = $entityName;
     }
 
     /**

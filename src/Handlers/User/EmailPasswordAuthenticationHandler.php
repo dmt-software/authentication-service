@@ -14,19 +14,15 @@ use SensitiveParameter;
  */
 final readonly class EmailPasswordAuthenticationHandler implements UserAuthenticationHandlerInterface
 {
-    /** @var class-string<Entity> */
-    private string $userEntity;
-
     public function __construct(
         private EntityManagerInterface $entityManager,
         private PasswordHandlerInterface $passwordHandler,
-        string $entityName
+        /** @var class-string<Entity> */
+        private string $userEntity
     ) {
-        if (!method_exists($entityName, 'isActive')) {
+        if (!class_exists($this->userEntity) || !method_exists($this->userEntity, 'isActive')) {
             throw new InvalidArgumentException('Entity must implement "isActive" method');
         }
-
-        $this->userEntity = $entityName;
     }
 
     /**

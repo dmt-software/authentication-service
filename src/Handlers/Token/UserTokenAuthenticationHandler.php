@@ -13,18 +13,14 @@ use SensitiveParameter;
  */
 class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
 {
-    /** @var class-string<Entity> */
-    private string $tokenEntity;
-
     public function __construct(
         private EntityManagerInterface $entityManager,
-        string $entityName
+        /** @var class-string<Entity> */
+        private string $tokenEntity
     ) {
-        if (!method_exists($entityName, 'isValid')) {
+        if (!class_exists($this->tokenEntity) || !method_exists($this->tokenEntity, 'isValid')) {
             throw new InvalidArgumentException('Entity must implement "isValid" method');
         }
-
-        $this->tokenEntity = $entityName;
     }
 
     /**
