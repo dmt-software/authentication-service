@@ -4,6 +4,7 @@ namespace DMT\AuthenticationService\Handlers\Token;
 
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
+use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use SensitiveParameter;
@@ -16,6 +17,7 @@ class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterf
     public function __construct(
         private EntityManagerInterface $entityManager,
         /** @var class-string<Entity> */
+        #[ConfigValue('authentication.token', 'DMT\Entity\Token')]
         private string $tokenEntity
     ) {
         if (!class_exists($this->tokenEntity) || !method_exists($this->tokenEntity, 'isValid')) {

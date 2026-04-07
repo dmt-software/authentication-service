@@ -5,6 +5,7 @@ namespace DMT\AuthenticationService\Handlers\User;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
+use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use SensitiveParameter;
@@ -18,6 +19,7 @@ final readonly class EmailPasswordAuthenticationHandler implements UserAuthentic
         private EntityManagerInterface $entityManager,
         private PasswordHandlerInterface $passwordHandler,
         /** @var class-string<Entity> */
+        #[ConfigValue('authentication.user', 'DMT\Entity\User')]
         private string $userEntity
     ) {
         if (!class_exists($this->userEntity) || !method_exists($this->userEntity, 'isActive')) {

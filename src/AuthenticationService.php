@@ -8,6 +8,7 @@ use DMT\AuthenticationService\Exceptions\AuthenticationException as Authenticati
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
+use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
 use SensitiveParameter;
 
@@ -22,6 +23,7 @@ final readonly class AuthenticationService implements AuthenticationServiceInter
         private UserAuthenticationHandlerInterface $userAuthenticationHandler,
         private TokenAuthenticationHandlerInterface $tokenAuthenticationHandler,
         /** @var class-string<Entity> */
+        #[ConfigValue('athentication.user', 'DMT\Entity\User')]
         private string $entityName
     ) {
     }
