@@ -12,7 +12,9 @@ use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\ContainerFactory;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use DMT\Test\AuthenticationService\Fixtures\UserToken;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 
 class AuthenticationServiceTest extends TestCase
@@ -106,32 +108,58 @@ class AuthenticationServiceTest extends TestCase
 
     private function getEntityManager(): EntityManagerInterface
     {
+        $repository = $this->createMock(EntityRepository::class);
+        $repository
+            ->expects($this->any())
+            ->method('findOneBy')
+            ->willReturnCallback(function (array $criteria) {
+                $token = new UserToken();
+                $token->id = 1;
+                $token->token = $criteria['token'] ?? null;
+                $token->reason = $criteria['reason'] ?? null;
+                $token->user = new User();
+
+                return $token;
+            });
+
         $manager = $this->createMock(EntityManagerInterface::class);
         $manager
             ->expects($this->any())
-            ->method('find')
-            ->willReturnCallback(function (string $entity, array $criteria) {
-                if ($entity === User::class) {
-                    $user = new User();
-                    $user->id = 1;
-                    $user->email = $criteria['email'] ?? null;
-                    $user->password = password_hash('password', PASSWORD_DEFAULT);
+            ->method('getRepository')
+            ->willReturnCallback(
+                function (string $entity) {
+                    $repository = $this->createMock(EntityRepository::class);
 
-                    return $user;
+                    if ($entity === User::class) {
+                        $repository
+                            ->expects($this->any())
+                            ->method('findOneBy')
+                            ->willReturnCallback(function (array $criteria) {
+                                $user = new User();
+                                $user->id = 1;
+                                $user->email = $criteria['email'] ?? null;
+                                $user->password = password_hash('password', PASSWORD_DEFAULT);
+
+                                return $user;
+                            });
+                    }
+                    if ($entity === UserToken::class) {
+                        $repository
+                            ->expects($this->any())
+                            ->method('findOneBy')
+                            ->willReturnCallback(function (array $criteria) {
+                                $token = new UserToken();
+                                $token->id = 1;
+                                $token->token = $criteria['token'] ?? null;
+                                $token->reason = $criteria['reason'] ?? null;
+                                $token->user = new User();
+
+                                return $token;
+                            });
+                    }
+                    return $repository;
                 }
-
-                if ($entity === UserToken::class) {
-                    $token = new UserToken();
-                    $token->id = 1;
-                    $token->token = $criteria['token'] ?? null;
-                    $token->reason = $criteria['reason'] ?? null;
-                    $token->user = new User();
-
-                    return $token;
-                }
-
-                return null;
-            });
+            );
 
         return $manager;
     }

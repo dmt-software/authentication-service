@@ -39,7 +39,7 @@ class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterf
             throw new AuthenticationException('Invalid token.');
         }
 
-        $userToken = $this->entityManager->find($this->tokenEntity, $parameters);
+        $userToken = $this->entityManager->getRepository($this->tokenEntity)->findOneBy($parameters);
 
         if ($userToken === null || ! $userToken->isValid() || ! $userToken->user) {
             throw new AuthenticationException('Invalid token.');

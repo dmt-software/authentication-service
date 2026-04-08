@@ -41,7 +41,7 @@ final readonly class EmailPasswordAuthenticationHandler implements UserAuthentic
             throw new AuthenticationException('Invalid credentials.');
         }
 
-        $user = $this->entityManager->find($this->userEntity, ['email' => $parameters['email']]);
+        $user = $this->entityManager->getRepository($this->userEntity)->findOneBy(['email' => $parameters['email']]);
 
         if ($user === null || !$user->isActive()) {
             throw new AuthenticationException('Invalid credentials.');

@@ -7,6 +7,7 @@ use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 
 class EmailPasswordHandlerTest extends TestCase
@@ -83,9 +84,18 @@ class EmailPasswordHandlerTest extends TestCase
         $manager = $this->createMock(EntityManagerInterface::class);
         $manager
             ->expects($this->once())
-            ->method('find')
+            ->method('getRepository')
             ->with(User::class)
-            ->willReturnCallback(fn() => $user);
+            ->willReturnCallback(
+                function () use ($user) {
+                    $repository = $this->createMock(EntityRepository::class);
+                    $repository
+                        ->expects($this->once())
+                        ->method('findOneBy')
+                        ->willReturnCallback(fn() => $user);
+
+                    return $repository;
+                });
 
         return $manager;
     }

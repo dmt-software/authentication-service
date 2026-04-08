@@ -7,6 +7,7 @@ use DMT\AuthenticationService\Handlers\Token\UserTokenAuthenticationHandler;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use DMT\Test\AuthenticationService\Fixtures\UserToken;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 
 class UserTokenHandlerTest extends TestCase
@@ -51,9 +52,19 @@ class UserTokenHandlerTest extends TestCase
         $manager = $this->createMock(EntityManagerInterface::class);
         $manager
             ->expects($this->once())
-            ->method('find')
+            ->method('getRepository')
             ->with(UserToken::class)
-            ->willReturnCallback(fn() => $userToken);
+            ->willReturnCallback(
+                function () use ($userToken) {
+                    $repository = $this->createMock(EntityRepository::class);
+                    $repository
+                        ->expects($this->once())
+                        ->method('findOneBy')
+                        ->willReturnCallback(fn() => $userToken);
+
+                    return $repository;
+                });
+
 
         return $manager;
     }
