@@ -50,11 +50,5 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
             value: fn (): AuthenticationServiceInterface
                 => $container->get(AuthenticationService::class)
         );
-
-        $container->set(
-            id: AuthenticationMiddleware::class,
-            value: fn (): AuthenticationMiddleware
-                => $container->get(AuthenticationMiddleware::class)
-        );
     }
 }

@@ -15,7 +15,7 @@ final readonly class AuthenticationMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private AuthenticationServiceInterface $service,
-        private Environment $twig,
+        private ?Environment $twig = null,
     ) {
     }
 
@@ -24,7 +24,7 @@ final readonly class AuthenticationMiddleware implements MiddlewareInterface
         $user = $this->service->getAuthenticatedUser();
 
         if ($user !== null) {
-            $this->twig->addGlobal('user', $user);
+            $this->twig?->addGlobal('user', $user);
 
             $request = $request->withAttribute('user', $user);
         }

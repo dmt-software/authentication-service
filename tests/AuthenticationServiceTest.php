@@ -63,7 +63,6 @@ class AuthenticationServiceTest extends TestCase
 
     public function testAuthenticateWithUserToken(): void
     {
-
         $entityManager = $this->getEntityManager();
 
         $container = new ContainerFactory()->createContainer();
