@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService\Middlewares;
 
-use DMT\AuthenticationService\AuthenticationServiceInterface;
+use DMT\AuthenticationService\AuthenticationService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -14,8 +14,8 @@ use Twig\Environment;
 final readonly class AuthenticationMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private AuthenticationServiceInterface $service,
-        private ?Environment $twig = null,
+        private AuthenticationService $service,
+        private Environment $twig,
     ) {
     }
 
@@ -24,7 +24,7 @@ final readonly class AuthenticationMiddleware implements MiddlewareInterface
         $user = $this->service->getAuthenticatedUser();
 
         if ($user !== null) {
-            $this->twig?->addGlobal('user', $user);
+            $this->twig->addGlobal('user', $user);
 
             $request = $request->withAttribute('user', $user);
         }

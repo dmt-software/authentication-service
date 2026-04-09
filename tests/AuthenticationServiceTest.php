@@ -7,12 +7,13 @@ use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\Token\UserTokenAuthenticationHandler;
+use DMT\AuthenticationService\Mailer\MailManager;
+use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\ContainerFactory;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use DMT\Test\AuthenticationService\Fixtures\UserToken;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -52,6 +53,7 @@ class AuthenticationServiceTest extends TestCase
             $sessionHandler,
             $container->get(UserAuthenticationHandlerInterface::class),
             $container->get(TokenAuthenticationHandlerInterface::class),
+            $this->createMock(MailManagerInterface::class),
             User::class
         );
 
@@ -95,6 +97,7 @@ class AuthenticationServiceTest extends TestCase
             $sessionHandler,
             $container->get(UserAuthenticationHandlerInterface::class),
             $container->get(TokenAuthenticationHandlerInterface::class),
+            $this->createMock(MailManagerInterface::class),
             User::class
         );
 

@@ -2,14 +2,16 @@
 
 namespace DMT\Test\AuthenticationService;
 
-use DMT\AuthenticationService\AuthenticationServiceInterface;
+use DMT\AuthenticationService\AuthenticationService;
 use DMT\AuthenticationService\AuthenticationServiceProvider;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Middlewares\AuthenticationMiddleware;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\ConfigurationInterface;
 use DMT\DependencyInjection\ContainerFactory;
+use DMT\MailService\Adapters\MailAdapterInterface;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use DMT\Test\AuthenticationService\Fixtures\UserToken;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,6 +30,7 @@ class AuthenticationServiceProviderTest extends TestCase
                 return match ($key) {
                     'authentication.user' => User::class,
                     'authentication.token' => UserToken::class,
+                    'mailer.sender' => 'user@example.com',
                     default => $default,
                 };
             });
@@ -36,11 +39,12 @@ class AuthenticationServiceProviderTest extends TestCase
         $container->set(EntityManagerInterface::class, fn () => $this->createMock(EntityManagerInterface::class));
         $container->set(Environment::class, fn () => $this->createMock(Environment::class));
         $container->set(ConfigurationInterface::class, fn () => $config);
+        $container->set(MailAdapterInterface::class, fn () => $this->createMock(MailAdapterInterface::class));
         $container->register(new AuthenticationServiceProvider());
 
         $this->assertInstanceOf(
-            AuthenticationServiceInterface::class,
-            $container->get(AuthenticationServiceInterface::class)
+            AuthenticationService::class,
+            $container->get(AuthenticationService::class)
         );
 
         $this->assertInstanceOf(

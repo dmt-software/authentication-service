@@ -3,7 +3,6 @@
 namespace DMT\Test\DMT\AuthenticationService\Middlewares;
 
 use DMT\AuthenticationService\AuthenticationService;
-use DMT\AuthenticationService\AuthenticationServiceInterface;
 use DMT\AuthenticationService\Middlewares\AuthenticationMiddleware;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use GuzzleHttp\Psr7\Response;
@@ -12,7 +11,6 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Twig\Environment;
-use Twig\Loader\ArrayLoader;
 
 class AuthenticationMiddlewareTest extends TestCase
 {
@@ -22,7 +20,7 @@ class AuthenticationMiddlewareTest extends TestCase
         $user->id = 12;
         $user->email = 'user@example.com';
 
-        $service = $this->createMock(AuthenticationServiceInterface::class);
+        $service = $this->createMock(AuthenticationService::class);
         $service
             ->expects($this->once())
             ->method('getAuthenticatedUser')

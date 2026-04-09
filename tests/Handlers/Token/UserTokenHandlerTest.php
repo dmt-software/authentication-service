@@ -63,7 +63,8 @@ class UserTokenHandlerTest extends TestCase
                         ->willReturnCallback(fn() => $userToken);
 
                     return $repository;
-                });
+                }
+            );
 
 
         return $manager;

@@ -2,12 +2,13 @@
 
 namespace DMT\Test\AuthenticationService\Fixtures;
 
+use DMT\AuthenticationService\Contracts\UserEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'User')]
 #[ORM\UniqueConstraint(name: 'uniq_User_email', columns: ['email'])]
-class User
+class User implements UserEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -16,6 +17,9 @@ class User
 
     #[ORM\Column(length: 180)]
     public string $email;
+
+    #[ORM\Column(length: 40)]
+    public string $username;
 
     #[ORM\Column(length: 255, nullable: true)]
     public ?string $password = null;

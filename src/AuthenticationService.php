@@ -4,36 +4,38 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
+use DMT\AuthenticationService\Contracts\UserEntity;
+use DMT\AuthenticationService\Contracts\UserTokenEntity;
 use DMT\AuthenticationService\Exceptions\AuthenticationException as AuthenticationException;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 use SensitiveParameter;
 
-/**
- * @template Entity of object
- */
-final readonly class AuthenticationService implements AuthenticationServiceInterface
+class AuthenticationService
 {
+    private EntityRepository $userRepository;
+
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        EntityManagerInterface $entityManager,
         private SessionHandlerInterface $sessionHandler,
         private UserAuthenticationHandlerInterface $userAuthenticationHandler,
         private TokenAuthenticationHandlerInterface $tokenAuthenticationHandler,
-        /** @var class-string<Entity> */
-        #[ConfigValue('athentication.user', 'DMT\Entity\User')]
-        private string $entityName
+        private MailManagerInterface $mailManager,
+        #[ConfigValue('authentication.user', 'DMT\Entity\User')]
+        string $userEntity
     ) {
+        $this->userRepository = $entityManager->getRepository($userEntity);
     }
 
     /**
-     * @return Entity
      * @throws AuthenticationException
-     * @throws \Doctrine\ORM\Exception\ORMException
      */
-    public function authenticate(#[SensitiveParameter] array $parameters, bool $persist = false): object
+    public function authenticate(#[SensitiveParameter] array $parameters, bool $persist = false): UserEntity
     {
         $user = $this->userAuthenticationHandler->authenticate($parameters);
 
@@ -45,11 +47,9 @@ final readonly class AuthenticationService implements AuthenticationServiceInter
     }
 
     /**
-     * @return Entity
      * @throws AuthenticationException
-     * @throws \Doctrine\ORM\Exception\ORMException
      */
-    public function authenticateByToken(#[SensitiveParameter] array $parameters, bool $persist = false): object
+    public function authenticateByToken(#[SensitiveParameter] array $parameters, bool $persist = false): UserEntity
     {
         $user = $this->tokenAuthenticationHandler->authenticate($parameters)->user;
 
@@ -60,11 +60,23 @@ final readonly class AuthenticationService implements AuthenticationServiceInter
         return $user;
     }
 
-    /**
-     * @return Entity|null
-     * @throws \Doctrine\ORM\Exception\ORMException
-     */
-    public function getAuthenticatedUser(): ?object
+    public function clear(): void
+    {
+        $this->sessionHandler->logout();
+    }
+
+    public function forgotPassword(string $email, UserTokenEntity $token): void
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (!$user || !$user->isActive() || $user != $token->user) {
+            return;
+        }
+
+        $this->mailManager->sendForgotPasswordLink($token);
+    }
+
+    public function getAuthenticatedUser(): ?UserEntity
     {
         $userId = $this->sessionHandler->getAuthenticatedUserId();
 
@@ -72,6 +84,9 @@ final readonly class AuthenticationService implements AuthenticationServiceInter
             return null;
         }
 
-        return $this->entityManager->find($this->entityName, $userId);
+        /** @var UserEntity $user */
+        $user = $this->userRepository->find($userId);
+
+        return $user;
     }
 }

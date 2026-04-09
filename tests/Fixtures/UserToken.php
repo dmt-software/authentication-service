@@ -2,13 +2,14 @@
 
 namespace DMT\Test\AuthenticationService\Fixtures;
 
+use DMT\AuthenticationService\Contracts\UserTokenEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'UserToken')]
 #[ORM\UniqueConstraint(name: 'uniq_user_token_token', columns: ['token'])]
-class UserToken
+class UserToken implements UserTokenEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
