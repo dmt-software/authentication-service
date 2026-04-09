@@ -16,4 +16,6 @@ use DateTimeImmutable;
 interface UserTokenEntity
 {
     public function isValid(): bool;
+
+    public function markUsed(): void;
 }

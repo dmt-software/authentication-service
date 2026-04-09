@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
+use DateTimeImmutable;
 use DMT\AuthenticationService\Contracts\UserEntity;
 use DMT\AuthenticationService\Contracts\UserTokenEntity;
-use DMT\AuthenticationService\Exceptions\AuthenticationException as AuthenticationException;
+use DMT\AuthenticationService\Exceptions\AuthenticationException;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
@@ -65,15 +66,25 @@ class AuthenticationService
         $this->sessionHandler->logout();
     }
 
-    public function forgotPassword(string $email, UserTokenEntity $token): void
+    public function forgotPassword(string $email): void
     {
+        /** @var UserEntity $user */
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
-        if (!$user || !$user->isActive() || $user != $token->user) {
+        if (!$user || !$user->isActive()) {
             return;
         }
 
-        $this->mailManager->sendForgotPasswordLink($token);
+        $parameters = [
+            'user' => $user,
+            'token' => uniqid('d', true),
+            'reason' => 'forgot-password',
+            'expiresAt' => new DateTimeImmutable('+20 minutes'),
+        ];
+
+        $this->mailManager->sendForgotPasswordLink(
+            $this->tokenAuthenticationHandler->generateToken($parameters),
+        );
     }
 
     public function getAuthenticatedUser(): ?UserEntity

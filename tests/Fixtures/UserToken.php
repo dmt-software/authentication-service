@@ -35,4 +35,9 @@ class UserToken implements UserTokenEntity
     {
         return $this->id !== null;
     }
+
+    public function markUsed(): void
+    {
+
+    }
 }

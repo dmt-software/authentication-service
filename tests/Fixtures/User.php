@@ -3,6 +3,7 @@
 namespace DMT\Test\AuthenticationService\Fixtures;
 
 use DMT\AuthenticationService\Contracts\UserEntity;
+use DMT\AuthenticationService\Contracts\UserTokenEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -27,5 +28,10 @@ class User implements UserEntity
     public function isActive(): bool
     {
         return $this->id !== null;
+    }
+
+    public function addToken(UserTokenEntity $token): bool
+    {
+        return false;
     }
 }

@@ -2,7 +2,9 @@
 
 namespace DMT\AuthenticationService\Mailer;
 
+use DMT\AuthenticationService\Contracts\UserTokenEntity;
+
 interface MailManagerInterface
 {
-    public function sendForgotPasswordLink(object $userToken): void;
+    public function sendForgotPasswordLink(UserTokenEntity $userToken): void;
 }
