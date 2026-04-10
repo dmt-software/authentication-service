@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\Test\AuthenticationService\Password;
 
 use DMT\AuthenticationService\Password\NativePasswordHandler;

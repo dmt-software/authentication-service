@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\Test\AuthenticationService;
 
 use DMT\AuthenticationService\AuthenticationService;
 use DMT\AuthenticationService\AuthenticationServiceProvider;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
-use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Middlewares\AuthenticationMiddleware;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
@@ -13,7 +14,7 @@ use DMT\DependencyInjection\ConfigurationInterface;
 use DMT\DependencyInjection\ContainerFactory;
 use DMT\MailService\Adapters\MailAdapterInterface;
 use DMT\Test\AuthenticationService\Fixtures\User;
-use DMT\Test\AuthenticationService\Fixtures\UserToken;
+use DMT\Test\AuthenticationService\Fixtures\Token;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
@@ -29,7 +30,7 @@ class AuthenticationServiceProviderTest extends TestCase
             ->willReturnCallback(function (string $key, mixed $default) {
                 return match ($key) {
                     'authentication.user' => User::class,
-                    'authentication.token' => UserToken::class,
+                    'authentication.token' => Token::class,
                     'mailer.sender' => 'user@example.com',
                     default => $default,
                 };

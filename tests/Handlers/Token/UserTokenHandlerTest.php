@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\Test\AuthenticationService\Handlers\Token;
 
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\AuthenticationService\Handlers\Token\UserTokenAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\Token\TokenAuthenticationHandler;
 use DMT\Test\AuthenticationService\Fixtures\User;
-use DMT\Test\AuthenticationService\Fixtures\UserToken;
+use DMT\Test\AuthenticationService\Fixtures\Token;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -14,13 +16,13 @@ class UserTokenHandlerTest extends TestCase
 {
     public function testAuthenticate(): void
     {
-        $token = new UserToken();
+        $token = new Token();
         $token->id = 1;
         $token->token = '69c67c86054e3';
         $token->reason = 'activate';
         $token->user = new User();
 
-        $handler = new UserTokenAuthenticationHandler($this->getEntityManagerForUserToken($token), UserToken::class);
+        $handler = new TokenAuthenticationHandler($this->getEntityManagerForUserToken($token), Token::class);
         $handler->authenticate(['token' => '69c67c86054e3', 'reason' => 'activate']);
     }
 
@@ -29,12 +31,12 @@ class UserTokenHandlerTest extends TestCase
         $this->expectException(AuthenticationException::class);
         $this->expectExceptionMessage('Invalid token.');
 
-        $token = new UserToken();
+        $token = new Token();
         $token->token = '7c8669c6054e3';
         $token->reason = 'forgot-password';
         $token->user = new User();
 
-        $handler = new UserTokenAuthenticationHandler($this->getEntityManagerForUserToken($token), UserToken::class);
+        $handler = new TokenAuthenticationHandler($this->getEntityManagerForUserToken($token), Token::class);
         $handler->authenticate(['token' => '7c8669c6054e3', 'reason' => 'forgot-password']);
     }
 
@@ -43,17 +45,17 @@ class UserTokenHandlerTest extends TestCase
         $this->expectException(AuthenticationException::class);
         $this->expectExceptionMessage('Invalid token.');
 
-        $handler = new UserTokenAuthenticationHandler($this->getEntityManagerForUserToken(null), UserToken::class);
+        $handler = new TokenAuthenticationHandler($this->getEntityManagerForUserToken(null), Token::class);
         $handler->authenticate(['token' => '7c8669c6054e3', 'reason' => 'forgot-password']);
     }
 
-    private function getEntityManagerForUserToken(?UserToken $userToken): EntityManagerInterface
+    private function getEntityManagerForUserToken(?Token $userToken): EntityManagerInterface
     {
         $manager = $this->createMock(EntityManagerInterface::class);
         $manager
             ->expects($this->once())
             ->method('getRepository')
-            ->with(UserToken::class)
+            ->with(Token::class)
             ->willReturnCallback(
                 function () use ($userToken) {
                     $repository = $this->createMock(EntityRepository::class);

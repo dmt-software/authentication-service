@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\Test\AuthenticationService\Fixtures;
 
 use DMT\AuthenticationService\Contracts\UserEntity;
-use DMT\AuthenticationService\Contracts\UserTokenEntity;
+use DMT\AuthenticationService\Contracts\TokenEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,7 +32,7 @@ class User implements UserEntity
         return $this->id !== null;
     }
 
-    public function addToken(UserTokenEntity $token): bool
+    public function addToken(TokenEntity $token): bool
     {
         return false;
     }

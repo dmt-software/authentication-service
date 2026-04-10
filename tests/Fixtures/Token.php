@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\Test\AuthenticationService\Fixtures;
 
-use DMT\AuthenticationService\Contracts\UserTokenEntity;
+use DateTimeImmutable;
+use DMT\AuthenticationService\Contracts\TokenEntity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'UserToken')]
 #[ORM\UniqueConstraint(name: 'uniq_user_token_token', columns: ['token'])]
-class UserToken implements UserTokenEntity
+class Token implements TokenEntity
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -20,7 +23,15 @@ class UserToken implements UserTokenEntity
     public string $token;
 
     #[ORM\Column(type: 'string', length: 50)]
-    public string $reason;
+    // phpcs:disable
+    public TokenType $reason {
+        set (TokenType|string $value) {
+            $this->reason = $value instanceof TokenType ? $value : TokenType::tryFrom($value);
+        }
+    }
+    // phpcs:enable
+
+    public ?DateTimeImmutable $expiresAt;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(
@@ -38,6 +49,5 @@ class UserToken implements UserTokenEntity
 
     public function markUsed(): void
     {
-
     }
 }

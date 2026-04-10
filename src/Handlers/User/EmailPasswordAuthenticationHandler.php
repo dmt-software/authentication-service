@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\AuthenticationService\Handlers\User;
 
 use DMT\AuthenticationService\Contracts\UserEntity;

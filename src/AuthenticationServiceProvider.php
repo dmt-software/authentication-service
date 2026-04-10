@@ -7,7 +7,7 @@ namespace DMT\AuthenticationService;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
-use DMT\AuthenticationService\Handlers\Token\UserTokenAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\Token\TokenAuthenticationHandler;
 use DMT\AuthenticationService\Mailer\MailManager;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
@@ -50,7 +50,7 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         $container->set(
             id: TokenAuthenticationHandlerInterface::class,
             value: fn (): TokenAuthenticationHandlerInterface
-                => $container->get(UserTokenAuthenticationHandler::class)
+                => $container->get(TokenAuthenticationHandler::class)
         );
 
         $container->set(

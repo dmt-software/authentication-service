@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService\Contracts;
 
-/**
- * @property string $email
- * @property string $password
- */
 interface UserEntity
 {
+    public string $email {
+        get;
+        set;
+    }
+
+    public ?string $password {
+        get;
+        set;
+    }
+
     public function isActive(): bool;
 }

@@ -95,6 +95,71 @@ class AuthenticationController
             );
     }
 
+    #[DMT\Route(method: ['GET', 'POST'], path: '/reset-password/{token}', name: 'reset-password')]
+    public function resetPassword(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        ...$args
+    ): ResponseInterface {
+        $args = array_merge(...$args) ?: $request->getAttributes();
+        $token = trim((string) ($args['token'] ?? ''));
+        $reason = 'forgot-password';
+
+        try {
+            $this->authenticationService->authenticateByToken(compact('token', 'reason'));
+
+            return $this->render($response, 'authentication/reset-password.twig');
+        } catch (AuthenticationException) {
+            $error = 'Reset password link is invalid or has expired.';
+        }
+
+        return $this->render(
+            $response->withStatus(401),
+            'authentication/reset-password.twig',
+            compact('error')
+        );
+    }
+
+    #[DMT\Route(method: ['POST'], path: '/reset-password/{token}')]
+    public function changePassword(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        ...$args
+    ): ResponseInterface {
+        $args = array_merge(...$args) ?: $request->getAttributes();
+        $parameters = array_map(trim(...), (array)$request->getParsedBody());
+
+        $token = trim((string) ($args['token'] ?? ''));
+        $password = $parameters['password'] ?? '';
+        $retypePassword = $parameters['retype'] ?? '';
+
+        try {
+            if (empty($password) || $password !== $retypePassword) {
+                throw new InvalidArgumentException('Password and retype do not match');
+            }
+
+            $this->authenticationService->resetPassword($token, $password);
+
+            return $response
+                ->withHeader('Location', '/login')
+                ->withStatus(302);
+        } catch (InvalidArgumentException $exception) {
+            return $this->render(
+                $response->withStatus(400),
+                'authentication/reset-password.twig',
+                ['error' => $exception->getMessage()]
+            );
+        } catch (AuthenticationException) {
+            $error = 'Reset password link is invalid or has expired.';
+        }
+
+        return $this->render(
+            $response->withStatus(401),
+            'authentication/reset-password.twig',
+            compact('error')
+        );
+    }
+
     private function render(ResponseInterface $response, string $template, array $context = []): ResponseInterface
     {
         $response->getBody()->write($this->twig->render($template, $context));

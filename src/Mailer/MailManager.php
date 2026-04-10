@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\AuthenticationService\Mailer;
 
-use DMT\AuthenticationService\Contracts\UserTokenEntity;
+use DMT\AuthenticationService\Contracts\TokenEntity;
 use DMT\DependencyInjection\Attributes\ConfigValue;
 use DMT\MailService\MailService;
 use DMT\MailService\Model\EmailAddress;
@@ -17,12 +19,12 @@ final readonly class MailManager implements MailManagerInterface
     ) {
     }
 
-    public function sendForgotPasswordLink(UserTokenEntity $userToken): void
+    public function sendForgotPasswordLink(string $email, TokenEntity $userToken): void
     {
         $message = new TemplatedMessage(
             subject: 'forgot password',
             template: 'mail/forgot-password.twig',
-            to: new EmailAddress($userToken->user->email),
+            to: new EmailAddress($email),
             from: new EmailAddress($this->from),
             context: compact('userToken'),
         );

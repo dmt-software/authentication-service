@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DMT\AuthenticationService\Handlers\Token;
 
 use BackedEnum;
-use DMT\AuthenticationService\Contracts\UserEntity;
-use DMT\AuthenticationService\Contracts\UserTokenEntity;
+use DMT\AuthenticationService\Contracts\TokenEntity;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\DependencyInjection\Attributes\ConfigValue;
@@ -16,20 +17,20 @@ use ReflectionException;
 use ReflectionProperty;
 use SensitiveParameter;
 
-class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
+class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
 {
-    private EntityRepository $userTokenRepository;
+    private EntityRepository $tokenRepository;
 
     public function __construct(
         private EntityManagerInterface $entityManager,
         #[ConfigValue('authentication.token', 'DMT\Entity\UserToken')]
         private string $tokenEntity
     ) {
-        if (!class_exists($tokenEntity) || !is_a($tokenEntity, UserTokenEntity::class, true)) {
-            throw new InvalidArgumentException('Entity must implement UserTokenEntity');
+        if (!class_exists($tokenEntity) || !is_a($tokenEntity, TokenEntity::class, true)) {
+            throw new InvalidArgumentException('Entity must implement TokenEntity');
         }
 
-        $this->userTokenRepository = $entityManager->getRepository($this->tokenEntity);
+        $this->tokenRepository = $entityManager->getRepository($this->tokenEntity);
     }
 
     /**
@@ -37,26 +38,26 @@ class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterf
      *
      * {@inheritDoc}
      */
-    public function authenticate(#[SensitiveParameter] array $parameters): UserTokenEntity
+    public function authenticate(#[SensitiveParameter] array $parameters): TokenEntity
     {
         if (!isset($parameters['token']) || !isset($parameters['reason'])) {
             throw new AuthenticationException('Invalid token.');
         }
 
-        /** @var UserTokenEntity $userToken */
-        $userToken = $this->userTokenRepository->findOneBy($this->prepareParameters($parameters));
+        /** @var TokenEntity $token */
+        $token = $this->tokenRepository->findOneBy($this->prepareParameters($parameters));
 
-        if ($userToken === null || !$userToken->isValid() || !$userToken->user) {
+        if ($token === null || !$token->isValid() || !$token->user) {
             throw new AuthenticationException('Invalid token.');
         }
 
-        return $userToken;
+        return $token;
     }
 
     /**
      * @inheritDoc
      */
-    public function generateToken(#[SensitiveParameter] array $parameters): UserTokenEntity
+    public function generateToken(#[SensitiveParameter] array $parameters): TokenEntity
     {
         if (
             !isset($parameters['token'])
@@ -68,7 +69,7 @@ class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterf
         }
 
         try {
-            /** @var UserTokenEntity $token */
+            /** @var TokenEntity $token */
             $token = new ReflectionClass($this->tokenEntity)->newInstance();
 
             foreach ($this->prepareParameters($parameters) as $property => $value) {
@@ -88,7 +89,7 @@ class UserTokenAuthenticationHandler implements TokenAuthenticationHandlerInterf
     {
         $reasonPropertyType = new ReflectionProperty($this->tokenEntity, 'reason')->getType();
 
-        if (is_a(BackedEnum::class, $reasonPropertyType->getName(), true)) {
+        if (is_subclass_of($reasonPropertyType->getName(), BackedEnum::class)) {
             /** @var BackedEnum $enum */
             $enum = $reasonPropertyType->getName();
 
