@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService\Handlers\Token;
 
-use BackedEnum;
 use DMT\AuthenticationService\Contracts\TokenEntity;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
@@ -14,11 +13,12 @@ use Doctrine\ORM\EntityRepository;
 use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionException;
-use ReflectionProperty;
 use SensitiveParameter;
 
 class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
 {
+    use PrepareParametersTrait;
+
     private EntityRepository $tokenRepository;
 
     public function __construct(
@@ -37,6 +37,8 @@ class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
      * Authenticate using a user token.
      *
      * {@inheritDoc}
+     *
+     * @throws ReflectionException
      */
     public function authenticate(#[SensitiveParameter] array $parameters): TokenEntity
     {
@@ -45,9 +47,11 @@ class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
         }
 
         /** @var TokenEntity $token */
-        $token = $this->tokenRepository->findOneBy($this->prepareParameters($parameters));
+        $token = $this->tokenRepository->findOneBy(
+            $this->prepareParameters($parameters, $this->tokenEntity)
+        );
 
-        if ($token === null || !$token->isValid() || !$token->user) {
+        if ($token === null || !$token->isValid()) {
             throw new AuthenticationException('Invalid token.');
         }
 
@@ -72,7 +76,7 @@ class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
             /** @var TokenEntity $token */
             $token = new ReflectionClass($this->tokenEntity)->newInstance();
 
-            foreach ($this->prepareParameters($parameters) as $property => $value) {
+            foreach ($this->prepareParameters($parameters, $this->tokenEntity) as $property => $value) {
                 $token->$property = $value;
             }
 
@@ -83,23 +87,5 @@ class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
         } catch (ReflectionException) {
             throw new InvalidArgumentException('Cannot generate token.');
         }
-    }
-
-    private function prepareParameters(array $parameters): array
-    {
-        $reasonPropertyType = new ReflectionProperty($this->tokenEntity, 'reason')->getType();
-
-        if (is_subclass_of($reasonPropertyType->getName(), BackedEnum::class)) {
-            /** @var BackedEnum $enum */
-            $enum = $reasonPropertyType->getName();
-
-            $parameters['reason'] = $enum::tryFrom($parameters['reason']);
-        } elseif ($reasonPropertyType->isBuiltin()) {
-            settype($parameters['reason'], $reasonPropertyType->getName());
-        } else {
-            throw new ReflectionException('Invalid type for reason property');
-        }
-
-        return $parameters;
     }
 }

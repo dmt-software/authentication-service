@@ -8,7 +8,7 @@ use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\Token\TokenAuthenticationHandler;
-use DMT\AuthenticationService\Mailer\MailManager;
+use DMT\AuthenticationService\Mailer\HtmlMailManager;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
@@ -34,7 +34,7 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
 
         $container->set(
             id: MailManagerInterface::class,
-            value: fn (): MailManagerInterface => $container->get(MailManager::class)
+            value: fn (): MailManagerInterface => $container->get(HtmlMailManager::class)
         );
 
         $container->set(

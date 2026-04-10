@@ -1,0 +1,38 @@
+{% block content %}
+    <h1>login</h1>
+
+    {% if error %}
+        <span style="color: red">{{ error }}</span>
+    {% endif %}
+
+    <form method="post">
+        <div>
+            <label for="email">email</label>
+            <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+            >
+        </div>
+
+        <div>
+            <label for="password">password</label>
+            <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+            >
+        </div>
+
+        <button type="submit">login</button>
+
+        <div>
+            <a href="/forgot-password">forgot password</a>
+        </div>
+    </form>
+{% endblock %}

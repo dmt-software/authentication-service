@@ -95,7 +95,7 @@ class AuthenticationController
             );
     }
 
-    #[DMT\Route(method: ['GET', 'POST'], path: '/reset-password/{token}', name: 'reset-password')]
+    #[DMT\Route(method: ['GET'], path: '/reset-password/{token}', name: 'reset-password')]
     public function resetPassword(
         ServerRequestInterface $request,
         ResponseInterface $response,
