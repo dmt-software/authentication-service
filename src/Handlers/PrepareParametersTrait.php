@@ -1,6 +1,6 @@
 <?php
 
-namespace DMT\AuthenticationService\Handlers\Token;
+namespace DMT\AuthenticationService\Handlers;
 
 use BackedEnum;
 use ReflectionException;

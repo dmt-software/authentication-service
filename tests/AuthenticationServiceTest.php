@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace DMT\Test\AuthenticationService;
 
 use DMT\AuthenticationService\AuthenticationService;
+use DMT\AuthenticationService\Handlers\Accessor\TokenAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\PublicProperty\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
-use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
-use DMT\AuthenticationService\Handlers\Token\TokenAuthenticationHandler;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;

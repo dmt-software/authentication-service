@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace DMT\AuthenticationService\Handlers\Token;
+namespace DMT\AuthenticationService\Handlers\Accessor;
 
 use DMT\AuthenticationService\Contracts\TokenEntity;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
+use DMT\AuthenticationService\Handlers\PrepareParametersTrait;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +16,14 @@ use ReflectionClass;
 use ReflectionException;
 use SensitiveParameter;
 
+/**
+ * This handler expects the following assessors to be present:
+ *
+ *  setToken(string $token)
+ *  setReason(string $reason)
+ *  setExpiresAt(DateTimeImmutable|DateTimeInterface|null $expiresAt)
+ *  setUser(UserEntity $user)
+ */
 class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
 {
     use PrepareParametersTrait;
@@ -77,7 +86,8 @@ class TokenAuthenticationHandler implements TokenAuthenticationHandlerInterface
             $token = new ReflectionClass($this->tokenEntity)->newInstance();
 
             foreach ($this->prepareParameters($parameters, $this->tokenEntity) as $property => $value) {
-                $token->$property = $value;
+                $setter = 'set' . ucfirst($property);
+                $token->$setter($value);
             }
 
             $this->entityManager->persist($token);

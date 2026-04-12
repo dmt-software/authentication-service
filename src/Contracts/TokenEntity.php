@@ -12,16 +12,6 @@ use DateTimeImmutable;
  */
 interface TokenEntity
 {
-    public string $token {
-        get;
-        set;
-    }
-
-    public DateTimeImmutable|null $expiresAt {
-        get;
-        set;
-    }
-
     /**
      * Check if the token is valid.
      */

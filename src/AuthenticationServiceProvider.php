@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
+use DMT\AuthenticationService\Handlers\PublicProperty\EmailPasswordAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\PublicProperty\TokenAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
-use DMT\AuthenticationService\Handlers\User\EmailPasswordAuthenticationHandler;
-use DMT\AuthenticationService\Handlers\Token\TokenAuthenticationHandler;
 use DMT\AuthenticationService\Mailer\HtmlMailManager;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use DMT\AuthenticationService\Session\DefaultSessionHandler;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
+use DMT\DependencyInjection\ConfigurationInterface;
 use DMT\DependencyInjection\Container;
 use DMT\DependencyInjection\Exceptions\NotFoundException;
 use DMT\DependencyInjection\ServiceProviderInterface;
@@ -47,16 +48,22 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
             value: fn (): PasswordHandlerInterface => new NativePasswordHandler()
         );
 
+        $config = $container->get(ConfigurationInterface::class);
+
         $container->set(
             id: TokenAuthenticationHandlerInterface::class,
             value: fn (): TokenAuthenticationHandlerInterface
-                => $container->get(TokenAuthenticationHandler::class)
+                => $container->get(
+                    $config->get('authentication.tokenHandler', TokenAuthenticationHandler::class),
+                )
         );
 
         $container->set(
             id: UserAuthenticationHandlerInterface::class,
             value: fn (): UserAuthenticationHandlerInterface
-                => $container->get(EmailPasswordAuthenticationHandler::class)
+                => $container->get(
+                    $config->get('authentication.userHandler', EmailPasswordAuthenticationHandler::class),
+                )
         );
     }
 }

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace DMT\Test\AuthenticationService\Handlers\Token;
+namespace DMT\Test\AuthenticationService\Handlers\PublicProperty;
 
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\AuthenticationService\Handlers\User\UsernamePasswordAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\PublicProperty\UsernamePasswordAuthenticationHandler;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\Test\AuthenticationService\Fixtures\User;
 use Doctrine\ORM\EntityManagerInterface;
