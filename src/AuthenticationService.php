@@ -96,8 +96,9 @@ readonly class AuthenticationService
 
         $this->entityManager->wrapInTransaction(function () use ($parameters, $password): void {
             $token = $this->tokenAuthenticationHandler->authenticate($parameters);
-            $token->user->password = $this->passwordHandler->hash($password);
             $token->markUsed();
+
+            $this->userAuthenticationHandler->updatePassword($token->user, $this->passwordHandler->hash($password));
 
             $this->entityManager->persist($token->user);
             $this->entityManager->persist($token);

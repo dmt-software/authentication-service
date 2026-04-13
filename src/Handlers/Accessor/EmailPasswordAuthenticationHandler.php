@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DMT\AuthenticationService\Handlers\PublicProperty;
+namespace DMT\AuthenticationService\Handlers\Accessor;
 
 use DMT\AuthenticationService\Contracts\UserEntity;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
@@ -15,11 +15,11 @@ use InvalidArgumentException;
 use SensitiveParameter;
 
 /**
- * This handler expects the following public property to be present:
+ * This handler expects the following method to be present:
  *
- *  password: string
+ *  setPassword(string $password)
  */
-final readonly class UsernamePasswordAuthenticationHandler implements UserAuthenticationHandlerInterface
+final readonly class EmailPasswordAuthenticationHandler implements UserAuthenticationHandlerInterface
 {
     private EntityRepository $userRepository;
 
@@ -32,25 +32,26 @@ final readonly class UsernamePasswordAuthenticationHandler implements UserAuthen
         if (!class_exists($userEntity) || !is_a($userEntity, UserEntity::class, true)) {
             throw new InvalidArgumentException('Entity must implement UserEntity');
         }
+        if (!method_exists($userEntity, 'setPassword')) {
+            throw new InvalidArgumentException('Entity must have a setPassword method');
+        }
 
         $this->userRepository = $entityManager->getRepository($userEntity);
     }
 
     /**
-     * Authenticate using username and password.
+     * Authenticate using email and password.
      *
      * {@inheritDoc}
      */
     public function authenticate(#[SensitiveParameter] array $parameters): UserEntity
     {
-        if (!isset($parameters['username']) || !isset($parameters['password'])) {
+        if (!isset($parameters['email']) || !isset($parameters['password'])) {
             throw new AuthenticationException('Invalid credentials.');
         }
 
         /** @var UserEntity $user */
-        $user = $this->userRepository->findOneBy([
-            'username' => $parameters['username']
-        ]);
+        $user = $this->userRepository->findOneBy(['email' => $parameters['email']]);
 
         if ($user === null || !$user->isActive()) {
             throw new AuthenticationException('Invalid credentials.');
@@ -64,10 +65,10 @@ final readonly class UsernamePasswordAuthenticationHandler implements UserAuthen
     }
 
     /**
-     * @param UserEntity{password: string} $user
+     * @param object|UserEntity{setPassword: callable(string, string):void} $user
      */
     public function updatePassword(UserEntity $user, #[SensitiveParameter] string $password): void
     {
-        $user->password = $password;
+        $user->setPassword($password);
     }
 }

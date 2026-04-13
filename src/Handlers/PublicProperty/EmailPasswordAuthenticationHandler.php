@@ -14,6 +14,11 @@ use Doctrine\ORM\EntityRepository;
 use InvalidArgumentException;
 use SensitiveParameter;
 
+/**
+ * This handler expects the following public property to be present:
+ *
+ *  password: string
+ */
 final readonly class EmailPasswordAuthenticationHandler implements UserAuthenticationHandlerInterface
 {
     private EntityRepository $userRepository;
@@ -54,5 +59,13 @@ final readonly class EmailPasswordAuthenticationHandler implements UserAuthentic
         }
 
         return $user;
+    }
+
+    /**
+     * @param UserEntity{password: string} $user
+     */
+    public function updatePassword(UserEntity $user, #[SensitiveParameter] string $password): void
+    {
+        $user->password = $password;
     }
 }

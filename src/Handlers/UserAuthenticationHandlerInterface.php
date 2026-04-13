@@ -14,4 +14,6 @@ interface UserAuthenticationHandlerInterface
      * @throws AuthenticationException
      */
     public function authenticate(#[SensitiveParameter] array $parameters): UserEntity;
+
+    public function updatePassword(UserEntity $user, #[SensitiveParameter] string $password): void;
 }

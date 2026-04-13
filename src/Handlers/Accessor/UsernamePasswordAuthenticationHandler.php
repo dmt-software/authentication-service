@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DMT\AuthenticationService\Handlers\PublicProperty;
+namespace DMT\AuthenticationService\Handlers\Accessor;
 
 use DMT\AuthenticationService\Contracts\UserEntity;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
@@ -15,9 +15,9 @@ use InvalidArgumentException;
 use SensitiveParameter;
 
 /**
- * This handler expects the following public property to be present:
+ * This handler expects the following method to be present:
  *
- *  password: string
+ *  setPassword(string $password)
  */
 final readonly class UsernamePasswordAuthenticationHandler implements UserAuthenticationHandlerInterface
 {
@@ -31,6 +31,9 @@ final readonly class UsernamePasswordAuthenticationHandler implements UserAuthen
     ) {
         if (!class_exists($userEntity) || !is_a($userEntity, UserEntity::class, true)) {
             throw new InvalidArgumentException('Entity must implement UserEntity');
+        }
+        if (!method_exists($userEntity, 'setPassword')) {
+            throw new InvalidArgumentException('Entity must have a setPassword method');
         }
 
         $this->userRepository = $entityManager->getRepository($userEntity);
@@ -64,10 +67,10 @@ final readonly class UsernamePasswordAuthenticationHandler implements UserAuthen
     }
 
     /**
-     * @param UserEntity{password: string} $user
+     * @param object|UserEntity{setPassword: callable(string):void} $user
      */
     public function updatePassword(UserEntity $user, #[SensitiveParameter] string $password): void
     {
-        $user->password = $password;
+        $user->setPassword($password);
     }
 }
