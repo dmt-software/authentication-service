@@ -32,6 +32,7 @@ class AuthenticationServiceProviderTest extends TestCase
                     'authentication.user' => User::class,
                     'authentication.token' => Token::class,
                     'mailer.sender' => 'user@example.com',
+                    'app.url' => 'http://example.com',
                     default => $default,
                 };
             });
