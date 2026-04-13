@@ -16,6 +16,7 @@ use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use InvalidArgumentException;
 use SensitiveParameter;
 
 readonly class AuthenticationService
@@ -56,7 +57,19 @@ readonly class AuthenticationService
     {
         $token = $this->tokenAuthenticationHandler->authenticate($parameters);
 
-        if ($persist && property_exists($token, 'user')) {
+        if ($persist) {
+            $user = null;
+
+            if (method_exists($token, 'getUser')) {
+                $user = $token->getUser();
+            } elseif (property_exists($token, 'user')) {
+                $user = $token->user;
+            }
+
+            if (!$user instanceof UserEntity) {
+                throw new InvalidArgumentException('Can not persist, invalid token user');
+            }
+
             $this->sessionHandler->login($token->user->id);
         }
 
