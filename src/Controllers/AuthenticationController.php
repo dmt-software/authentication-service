@@ -6,13 +6,13 @@ namespace DMT\AuthenticationService\Controllers;
 
 use DMT\AuthenticationService\AuthenticationService;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\RoutingService\Attributes as DMT;
+use DMT\Routing\Attributes as DMT;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Twig\Environment;
 
-#[DMT\RouteGroup(path: '')]
+#[DMT\RouteGroup(pattern: '')]
 class AuthenticationController
 {
     public function __construct(
@@ -21,7 +21,7 @@ class AuthenticationController
     ) {
     }
 
-    #[DMT\Route(method: ['GET', 'POST'], path: '/login', name: 'login')]
+    #[DMT\Route(methods: ['GET', 'POST'], pattern: '/login', name: 'login')]
     public function login(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if ($request->getMethod() === 'GET') {
@@ -52,7 +52,7 @@ class AuthenticationController
             );
     }
 
-    #[DMT\Route(method: ['GET'], path: '/logout', name: 'logout')]
+    #[DMT\Route(methods: ['GET'], pattern: '/logout', name: 'logout')]
     public function logout(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $this->authenticationService->clear();
@@ -62,7 +62,7 @@ class AuthenticationController
             ->withStatus(302);
     }
 
-    #[DMT\Route(method: ['GET', 'POST'], path: '/forgot-password', name: 'forgot-password')]
+    #[DMT\Route(methods: ['GET', 'POST'], pattern: '/forgot-password', name: 'forgot-password')]
     public function forgotPassword(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if ($request->getMethod() === 'GET') {
@@ -95,7 +95,7 @@ class AuthenticationController
             );
     }
 
-    #[DMT\Route(method: ['GET'], path: '/reset-password/{token}', name: 'reset-password')]
+    #[DMT\Route(methods: ['GET'], pattern: '/reset-password/{token}', name: 'reset-password')]
     public function resetPassword(
         ServerRequestInterface $request,
         ResponseInterface $response,
@@ -120,7 +120,7 @@ class AuthenticationController
         );
     }
 
-    #[DMT\Route(method: ['POST'], path: '/reset-password/{token}')]
+    #[DMT\Route(methods: ['POST'], pattern: '/reset-password/{token}')]
     public function changePassword(
         ServerRequestInterface $request,
         ResponseInterface $response,
