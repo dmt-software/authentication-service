@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService;
 
+use DMT\Apps\App;
 use DMT\AuthenticationService\Handlers\PublicProperty\EmailPasswordAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\PublicProperty\TokenAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
@@ -11,6 +12,7 @@ use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Mailer\HtmlMailManager;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
 use DMT\AuthenticationService\Mailer\TextMailManager;
+use DMT\AuthenticationService\Middlewares\AuthenticationMiddleware;
 use DMT\AuthenticationService\Password\NativePasswordHandler;
 use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use DMT\AuthenticationService\Session\DefaultSessionHandler;
@@ -67,5 +69,11 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
             id: UserAuthenticationHandlerInterface::class,
             value: fn (): UserAuthenticationHandlerInterface => $container->get($this->userEntityClass)
         );
+
+        if ($container->has(App::class)) {
+            $container->get(App::class)->addMiddleware(
+                middleware: $container->get(AuthenticationMiddleware::class),
+            );
+        }
     }
 }

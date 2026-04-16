@@ -111,9 +111,21 @@ readonly class AuthenticationService
             $token = $this->tokenAuthenticationHandler->authenticate($parameters);
             $token->markUsed();
 
-            $this->userAuthenticationHandler->updatePassword($token->user, $this->passwordHandler->hash($password));
+            $user = null;
 
-            $this->entityManager->persist($token->user);
+            if (method_exists($token, 'getUser')) {
+                $user = $token->getUser();
+            } elseif (property_exists($token, 'user')) {
+                $user = $token->user;
+            }
+
+            if (!$user instanceof UserEntity) {
+                throw new InvalidArgumentException('Can not persist, invalid token user');
+            }
+
+            $this->userAuthenticationHandler->updatePassword($user, $this->passwordHandler->hash($password));
+
+            $this->entityManager->persist($user);
             $this->entityManager->persist($token);
         });
     }
