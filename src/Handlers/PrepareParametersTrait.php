@@ -16,7 +16,9 @@ trait PrepareParametersTrait
             /** @var BackedEnum $enum */
             $enum = $reasonPropertyType->getName();
 
-            $parameters['reason'] = $enum::tryFrom($parameters['reason']);
+            if (is_scalar($parameters['reason'])) {
+                $parameters['reason'] = $enum::tryFrom($parameters['reason']);
+            }
         } elseif ($reasonPropertyType->isBuiltin()) {
             settype($parameters['reason'], $reasonPropertyType->getName());
         } else {
