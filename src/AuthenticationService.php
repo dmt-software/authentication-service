@@ -17,6 +17,8 @@ use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use InvalidArgumentException;
+use ReflectionException;
+use ReflectionProperty;
 use SensitiveParameter;
 
 readonly class AuthenticationService
@@ -44,7 +46,9 @@ readonly class AuthenticationService
         $user = $this->userAuthenticationHandler->authenticate($parameters);
 
         if ($persist) {
-            $this->sessionHandler->login($user->id);
+            $userId = new ReflectionProperty($user, 'id')->getValue($user);
+
+            $this->sessionHandler->login($userId);
         }
 
         return $user;
@@ -58,19 +62,15 @@ readonly class AuthenticationService
         $token = $this->tokenAuthenticationHandler->authenticate($parameters);
 
         if ($persist) {
-            $user = null;
-
-            if (method_exists($token, 'getUser')) {
-                $user = $token->getUser();
-            } elseif (property_exists($token, 'user')) {
-                $user = $token->user;
-            }
-
-            if (!$user instanceof UserEntity) {
+            try {
+                $user = new ReflectionProperty($token, 'user')->getValue($token);
+            } catch (ReflectionException) {
                 throw new InvalidArgumentException('Can not persist, invalid token user');
             }
 
-            $this->sessionHandler->login($token->user->id);
+            $userId = new ReflectionProperty($user, 'id')->getValue($user);
+
+            $this->sessionHandler->login($userId);
         }
 
         return $token;
@@ -111,15 +111,9 @@ readonly class AuthenticationService
             $token = $this->tokenAuthenticationHandler->authenticate($parameters);
             $token->markUsed();
 
-            $user = null;
-
-            if (method_exists($token, 'getUser')) {
-                $user = $token->getUser();
-            } elseif (property_exists($token, 'user')) {
-                $user = $token->user;
-            }
-
-            if (!$user instanceof UserEntity) {
+            try {
+                $user = new ReflectionProperty($token, 'user')->getValue($token);
+            } catch (ReflectionException) {
                 throw new InvalidArgumentException('Can not persist, invalid token user');
             }
 
