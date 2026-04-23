@@ -8,12 +8,11 @@ use ReflectionProperty;
 
 class ValidatedToken
 {
+    // phpcs:disable
     public UserEntity $user {
-        get {
-            return new ReflectionProperty($this->token, 'user')
-                ->getValue($this->token);
-        }
+        get => new ReflectionProperty($this->token, 'user')->getValue($this->token);
     }
+    // phpcs:enable
 
     public function __construct(
         public readonly TokenEntity $token,
