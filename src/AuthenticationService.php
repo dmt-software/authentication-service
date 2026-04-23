@@ -7,18 +7,19 @@ namespace DMT\AuthenticationService;
 use DateTimeImmutable;
 use DMT\AuthenticationService\Contracts\UserEntity;
 use DMT\AuthenticationService\Contracts\TokenEntity;
+use DMT\AuthenticationService\Event\Model\AccessToken;
+use DMT\AuthenticationService\Event\Model\CreateToken;
+use DMT\AuthenticationService\Event\Model\UpdatePassword;
+use DMT\AuthenticationService\Event\Model\UserCredentials;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
-use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
+use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
-use DMT\AuthenticationService\Password\PasswordHandlerInterface;
 use DMT\AuthenticationService\Session\SessionHandlerInterface;
 use DMT\DependencyInjection\Attributes\ConfigValue;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
-use InvalidArgumentException;
-use ReflectionException;
-use ReflectionProperty;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use SensitiveParameter;
 
 readonly class AuthenticationService
@@ -28,7 +29,7 @@ readonly class AuthenticationService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private SessionHandlerInterface $sessionHandler,
-        private PasswordHandlerInterface $passwordHandler,
+        private EventDispatcherInterface $eventDispatcher,
         private UserAuthenticationHandlerInterface $userAuthenticationHandler,
         private TokenAuthenticationHandlerInterface $tokenAuthenticationHandler,
         private MailManagerInterface $mailManager,
@@ -43,15 +44,16 @@ readonly class AuthenticationService
      */
     public function authenticate(#[SensitiveParameter] array $parameters, bool $persist = false): UserEntity
     {
-        $user = $this->userAuthenticationHandler->authenticate($parameters);
+        $credentials = new UserCredentials(...$parameters);
 
-        if ($persist) {
-            $userId = new ReflectionProperty($user, 'id')->getValue($user);
+        $this->eventDispatcher->dispatch($credentials);
 
-            $this->sessionHandler->login($userId);
-        }
+        $authenticatedUser = $this->userAuthenticationHandler->authenticate($credentials);
+        $authenticatedUser->persist = $persist;
 
-        return $user;
+        $this->eventDispatcher->dispatch($authenticatedUser);
+
+        return $authenticatedUser->user;
     }
 
     /**
@@ -59,21 +61,16 @@ readonly class AuthenticationService
      */
     public function authenticateByToken(#[SensitiveParameter] array $parameters, bool $persist = false): TokenEntity
     {
-        $token = $this->tokenAuthenticationHandler->authenticate($parameters);
+        $accessToken = new AccessToken(...$parameters);
 
-        if ($persist) {
-            try {
-                $user = new ReflectionProperty($token, 'user')->getValue($token);
-            } catch (ReflectionException) {
-                throw new InvalidArgumentException('Can not persist, invalid token user');
-            }
+        $this->eventDispatcher->dispatch($accessToken);
 
-            $userId = new ReflectionProperty($user, 'id')->getValue($user);
+        $validatedToken = $this->tokenAuthenticationHandler->authenticate($accessToken);
+        $validatedToken->persist = $persist;
 
-            $this->sessionHandler->login($userId);
-        }
+        $this->eventDispatcher->dispatch($validatedToken);
 
-        return $token;
+        return $validatedToken->token;
     }
 
     public function clear(): void
@@ -90,37 +87,43 @@ readonly class AuthenticationService
             return;
         }
 
-        $token = $this->tokenAuthenticationHandler->generateToken([
-            'user' => $user,
-            'token' => uniqid('d', true),
-            'reason' => 'forgot-password',
-            'expiresAt' => new DateTimeImmutable('+20 minutes'),
-        ]);
+        $createToken = new CreateToken(
+            uniqid('d', true),
+            'forgot-password',
+            $user,
+            new DateTimeImmutable('+20 minutes')
+        );
 
-        $this->mailManager->sendForgotPasswordLink($email, $token);
+        $this->eventDispatcher->dispatch($createToken);
+
+        $generatedToken = $this->tokenAuthenticationHandler->generateToken($createToken);
+
+        $this->eventDispatcher->dispatch($generatedToken);
+
+        $this->mailManager->sendForgotPasswordLink($email, $generatedToken->token);
     }
 
     public function resetPassword(string $token, string $password): void
     {
-        $parameters = [
-            'token' => $token,
-            'reason' => 'forgot-password',
-        ];
+        $accessToken = new AccessToken($token, 'forgot-password');
 
-        $this->entityManager->wrapInTransaction(function () use ($parameters, $password): void {
-            $token = $this->tokenAuthenticationHandler->authenticate($parameters);
-            $token->markUsed();
+        $this->entityManager->wrapInTransaction(function () use ($accessToken, $password): void {
+            $this->eventDispatcher->dispatch($accessToken);
 
-            try {
-                $user = new ReflectionProperty($token, 'user')->getValue($token);
-            } catch (ReflectionException) {
-                throw new InvalidArgumentException('Can not persist, invalid token user');
-            }
+            $validatedToken = $this->tokenAuthenticationHandler->authenticate($accessToken);
 
-            $this->userAuthenticationHandler->updatePassword($user, $this->passwordHandler->hash($password));
+            $this->eventDispatcher->dispatch($validatedToken);
 
-            $this->entityManager->persist($user);
-            $this->entityManager->persist($token);
+            $updatePassword = new UpdatePassword($validatedToken->user, $password);
+
+            $this->eventDispatcher->dispatch($updatePassword);
+
+            $changedUser = $this->userAuthenticationHandler->updatePassword($updatePassword);
+
+            $this->eventDispatcher->dispatch($changedUser);
+
+            $this->entityManager->persist($changedUser->user);
+            $this->entityManager->persist($validatedToken->token);
         });
     }
 
