@@ -74,13 +74,18 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         );
 
         $container->set(
+            id: AuthenticationServiceEventDispatcher::class,
+            value: fn (): AuthenticationServiceEventDispatcher => new AuthenticationServiceEventDispatcher(
+                $container->get(ReasonTypeEventSubscriber::class),
+                $container->get(PersistAuthenticatedUserEventSubscriber::class),
+            )
+        );
+
+        $container->set(
             id: AuthenticationService::class,
             value: fn (): AuthenticationService => $container->get(
                 AuthenticationService::class,
-                eventDispatcher: new AuthenticationServiceEventDispatcher(
-                    $container->get(ReasonTypeEventSubscriber::class),
-                    $container->get(PersistAuthenticatedUserEventSubscriber::class),
-                )
+                eventDispatcher: $container->get(AuthenticationServiceEventDispatcher::class)
             )
         );
 
