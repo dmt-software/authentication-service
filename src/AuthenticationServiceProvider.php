@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace DMT\AuthenticationService;
 
 use DMT\Apps\App;
-use DMT\AuthenticationService\Handlers\PublicProperty\EmailPasswordAuthenticationHandler;
-use DMT\AuthenticationService\Handlers\PublicProperty\TokenAuthenticationHandler;
+use DMT\AuthenticationService\Event\AuthenticationServiceEventDispatcher;
+use DMT\AuthenticationService\Event\Subscribers\PersistAuthenticatedUserEventSubscriber;
+use DMT\AuthenticationService\Event\Subscribers\ReasonTypeEventSubscriber;
+use DMT\AuthenticationService\Handlers\Entity\EmailPasswordAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\Entity\TokenReasonAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Mailer\HtmlMailManager;
@@ -28,8 +31,8 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
     public function __construct(
         #[ConfigValue('authentication.userHandler', EmailPasswordAuthenticationHandler::class)]
         private string $userEntityClass = EmailPasswordAuthenticationHandler::class,
-        #[ConfigValue('authentication.tokenHandler', TokenAuthenticationHandler::class)]
-        private string $tokenEntityClass = TokenAuthenticationHandler::class,
+        #[ConfigValue('authentication.tokenHandler', TokenReasonAuthenticationHandler::class)]
+        private string $tokenEntityClass = TokenReasonAuthenticationHandler::class,
         #[ConfigValue('authentication.mailManager', HtmlMailManager::class)]
         private string $mailManagerClass = TextMailManager::class,
         #[ConfigValue('authentication.sessionHandler', DefaultSessionHandler::class)]
@@ -68,6 +71,22 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         $container->set(
             id: UserAuthenticationHandlerInterface::class,
             value: fn (): UserAuthenticationHandlerInterface => $container->get($this->userEntityClass)
+        );
+
+        $container->set(
+            id: AuthenticationServiceEventDispatcher::class,
+            value: fn (): AuthenticationServiceEventDispatcher => new AuthenticationServiceEventDispatcher(
+                $container->get(ReasonTypeEventSubscriber::class),
+                $container->get(PersistAuthenticatedUserEventSubscriber::class),
+            )
+        );
+
+        $container->set(
+            id: AuthenticationService::class,
+            value: fn (): AuthenticationService => $container->get(
+                AuthenticationService::class,
+                eventDispatcher: $container->get(AuthenticationServiceEventDispatcher::class)
+            )
         );
 
         if ($container->has(App::class)) {

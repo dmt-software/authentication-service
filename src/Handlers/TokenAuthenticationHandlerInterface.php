@@ -4,26 +4,22 @@ declare(strict_types=1);
 
 namespace DMT\AuthenticationService\Handlers;
 
-use DateTimeImmutable;
-use DMT\AuthenticationService\Contracts\UserEntity;
-use DMT\AuthenticationService\Contracts\TokenEntity;
+use DMT\AuthenticationService\Event\Model\AccessToken;
+use DMT\AuthenticationService\Event\Model\CreateToken;
+use DMT\AuthenticationService\Event\Model\GeneratedToken;
+use DMT\AuthenticationService\Event\Model\ValidatedToken;
 use DMT\AuthenticationService\Exceptions\AuthenticationException;
 use InvalidArgumentException;
-use SensitiveParameter;
 
 interface TokenAuthenticationHandlerInterface
 {
     /**
-     * @param array{token: string, reason: string} $parameters
-     *
      * @throws AuthenticationException
      */
-    public function authenticate(#[SensitiveParameter] array $parameters): TokenEntity;
+    public function authenticate(AccessToken $accessToken): ValidatedToken;
 
     /**
-     * @param array{user: UserEntity, token: string, reason: string, expiresAt: DateTimeImmutable} $parameters
-     *
      * @throws InvalidArgumentException
      */
-    public function generateToken(#[SensitiveParameter] array $parameters): TokenEntity;
+    public function generateToken(CreateToken $createToken): GeneratedToken;
 }

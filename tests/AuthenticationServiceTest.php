@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace DMT\Test\AuthenticationService;
 
 use DMT\AuthenticationService\AuthenticationService;
-use DMT\AuthenticationService\Handlers\Accessor\TokenAuthenticationHandler;
-use DMT\AuthenticationService\Handlers\PublicProperty\EmailPasswordAuthenticationHandler;
+use DMT\AuthenticationService\Event\AuthenticationServiceEventDispatcher;
+use DMT\AuthenticationService\Event\Subscribers\PersistAuthenticatedUserEventSubscriber;
+use DMT\AuthenticationService\Event\Subscribers\ReasonTypeEventSubscriber;
+use DMT\AuthenticationService\Handlers\Entity\EmailPasswordAuthenticationHandler;
+use DMT\AuthenticationService\Handlers\Entity\TokenReasonAuthenticationHandler;
 use DMT\AuthenticationService\Handlers\TokenAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Handlers\UserAuthenticationHandlerInterface;
 use DMT\AuthenticationService\Mailer\MailManagerInterface;
@@ -36,7 +39,7 @@ class AuthenticationServiceTest extends TestCase
         );
         $container->set(
             TokenAuthenticationHandlerInterface::class,
-            fn (): TokenAuthenticationHandlerInterface => new TokenAuthenticationHandler(
+            fn (): TokenAuthenticationHandlerInterface => new TokenReasonAuthenticationHandler(
                 $entityManager,
                 Token::class,
             )
@@ -52,7 +55,9 @@ class AuthenticationServiceTest extends TestCase
             AuthenticationService::class,
             $entityManager,
             $sessionHandler,
-            new NativePasswordHandler(),
+            new AuthenticationServiceEventDispatcher(
+                $container->get(PersistAuthenticatedUserEventSubscriber::class, $sessionHandler),
+            ),
             $container->get(UserAuthenticationHandlerInterface::class),
             $container->get(TokenAuthenticationHandlerInterface::class),
             $this->createMock(MailManagerInterface::class),
@@ -82,7 +87,7 @@ class AuthenticationServiceTest extends TestCase
         );
         $container->set(
             TokenAuthenticationHandlerInterface::class,
-            fn (): TokenAuthenticationHandlerInterface => new TokenAuthenticationHandler(
+            fn (): TokenAuthenticationHandlerInterface => new TokenReasonAuthenticationHandler(
                 $entityManager,
                 Token::class,
             )
@@ -97,7 +102,9 @@ class AuthenticationServiceTest extends TestCase
             AuthenticationService::class,
             $entityManager,
             $sessionHandler,
-            new NativePasswordHandler(),
+            new AuthenticationServiceEventDispatcher(
+                $container->get(ReasonTypeEventSubscriber::class, Token::class),
+            ),
             $container->get(UserAuthenticationHandlerInterface::class),
             $container->get(TokenAuthenticationHandlerInterface::class),
             $this->createMock(MailManagerInterface::class),
