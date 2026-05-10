@@ -90,8 +90,15 @@ readonly class AuthenticationServiceProvider implements ServiceProviderInterface
         );
 
         if ($container->has(App::class)) {
+            if ($container->has(\Twig\Environment::class)) {
+                $twig = $container->get(\Twig\Environment::class);
+            }
+
             $container->get(App::class)->addMiddleware(
-                middleware: $container->get(AuthenticationMiddleware::class),
+                middleware: $container->get(
+                    AuthenticationMiddleware::class,
+                    twig: $twig
+                ),
             );
         }
     }
