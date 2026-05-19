@@ -38,7 +38,7 @@ class AuthenticationController
             $this->authenticationService->authenticate($data, true);
 
             return $response
-                ->withHeader('Location', '/')
+                ->withHeader('Location', $this->redirectTo($request))
                 ->withStatus(302);
         } catch (AuthenticationException) {
             $error = 'Login failed';
@@ -166,5 +166,22 @@ class AuthenticationController
         $response->getBody()->rewind();
 
         return $response;
+    }
+
+    private function redirectTo(ServerRequestInterface $request): string
+    {
+        $redirect = $request->getQueryParams()['redirect'] ?? '/';
+
+        if (! $redirect || str_starts_with($redirect, '//') || str_ends_with(rtrim($redirect, '/'), '/login')) {
+            return '/';
+        }
+
+        $rootUrl = $request->getUri()->getScheme() . '://' . $request->getUri()->getHost();
+
+        if (str_starts_with($redirect, $request->getUri()->getScheme())) {
+            return str_starts_with($redirect, $rootUrl) ? $redirect : '/';
+        }
+
+        return '/' . trim((string)$redirect, '/');
     }
 }
